@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+
+model User {
+  user_id       String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password_hash String
+  user_type     String
+  created_at    DateTime @default(now())
+
+  recruiterProfile RecruiterProfile?
+  studentProfile   StudentProfile?
+  applications     Application[]
+}
+
+model Company {
+  company_id String   @id @default(uuid())
+  name       String
+  website    String
+  logo_url   String?
+  industry   String
+  location   String
+  description String
+
+  recruiters  RecruiterProfile[]
+  internships Internship[]
+}
+
+model RecruiterProfile {
+  user_id     String   @id
+  company_id  String
+  designation String
+
+  user     User    @relation(fields: [user_id], references: [user_id])
+  company  Company @relation(fields: [company_id], references: [company_id])
+  internships Internship[]
+}
+
+model StudentProfile {
+  student_id   String @id
+  phone_number String
+  skills       String
+  resume_url   String
+
+  user           User             @relation(fields: [student_id], references: [user_id])
+  education      Education[]
+  projects       Project[]
+  certifications Certification[]
+}
+
+model Internship {
+  internship_id         String   @id @default(uuid())
+  title                 String
+  category              String
+  mode                  String
+  location              String
+  start_date            DateTime
+  duration              Int
+  stipend               Int
+  skills_required       String
+  perks                 String
+  openings              Int
+  posted_at             DateTime @default(now())
+  application_deadline  DateTime
+  status                String
+  company_id            String
+  recruiter_id          String
+
+  company    Company          @relation(fields: [company_id], references: [company_id])
+  recruiter  RecruiterProfile @relation(fields: [recruiter_id], references: [user_id])
+  applications Application[]
+}
+
+model Application {
+  application_id      String   @id @default(uuid())
+  internship_id       String
+  user_id             String
+  status              String
+  applied_at          DateTime @default(now())
+  resume_snapshot_url String
+
+  internship Internship @relation(fields: [internship_id], references: [internship_id])
+  user       User       @relation(fields: [user_id], references: [user_id])
+}
+
+model Education {
+  education_id       String   @id @default(uuid())
+  student_id         String
+  education          String
+  university         String
+  specialization     String
+  course_type        String
+  cgpa               Float
+  course             String
+  year_of_graduation Int
+
+  student StudentProfile @relation(fields: [student_id], references: [student_id])
+}
+
+model Project {
+  project_id     String   @id @default(uuid())
+  student_id     String
+  title          String
+  description    String
+  tech_stack     String
+  start_date     DateTime
+  end_date       DateTime
+  project_status String
+
+  student StudentProfile @relation(fields: [student_id], references: [student_id])
+}
+
+model Certification {
+  certification_id String   @id @default(uuid())
+  student_id       String
+  name             String
+  provider         String
+  certification_url String
+  completed_at     DateTime
+
+  student StudentProfile @relation(fields: [student_id], references: [student_id])
+}
